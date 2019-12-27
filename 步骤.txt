@@ -1,0 +1,1 @@
+1.把文件夹建好后 下载element-ui 插件  yarn add vue-cli-plugin-element   安装axios 运行依赖
