@@ -18,11 +18,12 @@
         <el-menu
           background-color="#333744"
           text-color="#fff"
-          active-text-color="#ffd04b"
+          active-text-color="#409EFF"
           :unique-opened="true"
           :collapse="isCollapse"
           :collapse-transition="false"
           :default-active="navActive"
+          :router="true"
         >
           <!-- 一级菜单 -->
           <el-submenu :index="item.id+''" v-for="item in asideList" :key="item.id">
@@ -64,7 +65,7 @@ export default {
       asideList: null,
       //   侧边栏图标
       iconsObj: {
-        '125': 'iconfont icon-user',
+        '125': 'iconfont icon-users',
         '103': 'iconfont icon-tijikongjian',
         '101': 'iconfont icon-shangpin',
         '102': 'iconfont icon-danju',
@@ -147,5 +148,8 @@ export default {
   font-size: 12px;
   color: #fff;
   cursor: pointer;
+}
+.el-menu {
+    border-right: none
 }
 </style>

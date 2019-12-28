@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import Mbx from './components/views/Mbx.vue'
 import ElementUI, {
   Message
 } from 'element-ui'
@@ -16,6 +17,7 @@ axios.interceptors.request.use(config => {
   config.headers.Authorization = window.sessionStorage.getItem('token')
   return config
 })
+Vue.component('Mbx', Mbx)
 
 //  接口基准地址
 axios.defaults.baseURL = `http://127.0.0.1:8888/api/private/v1/`
