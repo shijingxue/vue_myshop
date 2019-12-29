@@ -38,9 +38,17 @@
           </template>
         </el-table-column>
         <el-table-column label="操作">
-          <template>
-            <el-button size="mini" type="primary" icon="el-icon-edit"></el-button>
-            <el-button size="mini" type="danger" icon="el-icon-delete"></el-button>
+          <template slot-scope="scope">
+            <!-- 修改 -->
+            <el-button size="mini" type="primary" icon="el-icon-edit" @click="editUsers(scope.row)"></el-button>
+            <!-- 删除 -->
+            <el-button
+              size="mini"
+              type="danger"
+              icon="el-icon-delete"
+              @click="deleteUsers(scope.row)"
+            ></el-button>
+            <!-- 分配角色 -->
             <el-button size="mini" type="warning" icon="el-icon-setting"></el-button>
           </template>
         </el-table-column>
@@ -75,6 +83,30 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addUsersBtn()">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 编辑用户对话框 -->
+    <el-dialog title="提示" :visible.sync="editUsersVisible" width="50%">
+      <el-form
+        :model="editForm"
+        :rules="editFormRules"
+        ref="editFormRef"
+        label-width="100px"
+        @close="editFormClose"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="editForm.username" :disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="editForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editUsersVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editBtn">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -124,6 +156,19 @@ export default {
       addUserRules: {
         username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 2, max: 10, message: '长度在2 到 10 个字符', trigger: 'blur' }],
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, max: 15, message: '长度在6 到 15 个字符', trigger: 'blur' }],
+        email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { validator: checkEmail, message: '邮箱格式不正确，请重新输入', trigger: 'blur' }],
+        mobile: [{ required: true, message: '请输入手机', trigger: 'blur' }, { validator: checkMobile, message: '手机号码不正确，请重新输入', trigger: 'blur' }]
+      },
+      //  编辑用户对话框显示与隐藏
+      editUsersVisible: false,
+      //  编辑用户
+      editForm: {
+        username: '',
+        email: '',
+        mobile: ''
+      },
+      //  编辑用户规则
+      editFormRules: {
         email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { validator: checkEmail, message: '邮箱格式不正确，请重新输入', trigger: 'blur' }],
         mobile: [{ required: true, message: '请输入手机', trigger: 'blur' }, { validator: checkMobile, message: '手机号码不正确，请重新输入', trigger: 'blur' }]
       }
@@ -188,6 +233,61 @@ export default {
         this.getusersList()
         this.addDialogVisible = false
       })
+    },
+    //  编辑用户按钮
+    async editUsers(row) {
+      //  发送请求 获取当前用户数据
+      const { data: res } = await this.$http.get(`users/${row.id}`)
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取用户信息失败')
+      }
+      this.editForm = res.data
+      this.editUsersVisible = true
+    },
+    //  关闭编辑对话框时重置表单
+    editFormClose() {
+      this.$refs.editFormRef.resetFields()
+    },
+    //  点击确定 修改用户信息
+    editBtn() {
+      //  在发送请求前 进行表单预验证
+      this.$refs.editFormRef.validate(async valid => {
+        if (!valid) {
+          return this.$message.error('请填写完整信息')
+        }
+        // 发送请求
+        const { data: res } = await this.$http.put(`users/${this.editForm.id}`, this.editForm)
+        if (res.meta.status !== 200) {
+          return this.$message.error('修改用户信息失败')
+        }
+        this.getusersList()
+        this.editUsersVisible = false
+      })
+    },
+    //  删除按钮点击  把错误提醒捕捉 不然会报错
+    async deleteUsers(row) {
+      //  弹出提示框
+      const isConfirm = await this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err)
+      if (isConfirm !== 'confirm') {
+        return this.$message.info('已取消删除')
+      }
+      //  调用接口删除用户
+      const { data: res } = await this.$http.delete(`users/${row.id}`)
+      if (res.meta.status !== 200) {
+        return this.$message.error('删除用户失败')
+      }
+      this.$message.success('删除用户成功')
+      //  如果删除的当前页只剩一条数据  在删除后就跳转到前一页
+      if (this.queryInfo.pagenum !== 1) {
+        if (this.usersList.length === 1) {
+          this.queryInfo.pagenum -= 1
+        }
+      }
+      this.getusersList()
     }
   }
 }
